@@ -1,7 +1,8 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
-from .forms import TipsName
+from .forms import TipsName, UserName
+from .models import *
 
 
 def homePage(request):
@@ -12,37 +13,81 @@ def index(request):
     return render(request, 'index.html')
 
 
-def User_new(request):
+def new_User(request):
     if request.method == "POST":
         try:
             if request.method == "POST":
                 form = UserName(request.POST)
                 if form.is_valid():
                     name = form['user_name'].value()
-                    user = user(name=name)
+                    user = User(name=name)
                     name.save()
                     return HttpResponse(f"<h3>id: {user.id} name: {user.name}</h3>")
         except Exception as e:
-            return HttpResponse(f"<h1><b>Продукт с этим именем уже есть!</b>{e}</h1>")
+            return HttpResponse(f"<h1><b>Это уже есть !!</b>{e}</h1>")
     else:
         form = UserName()
-        return render(request, "addProduct.html", {'form': form})
+        return render(request, "addTips.html", {'form': form})
+
 
 def add_tips(request):
     if request.method == "POST":
         try:
             form = TipsName(request.POST)
             if form.is_valid():
-                name = form['product_name'].value()
-                tips = tips(name=name)
+                name = form['tips_name'].value()
+                tips = Tips(name=name)
                 tips.save()
                 return redirect("/")
         except Exception as e:
             form = TipsName(request.POST)
-            return render(request, "addProduct.html", {
+            return render(request, "addTips.html", {
                 'form': form,
                 'error_message': "такое имя занято"
             })
     else:
         form = TipsName()
-        return render(request, "addProduct.html", {'form': form})
+        return render(request, "addTips.html", {'form': form})
+
+
+def tips_list(request):
+    out = Tips.objects.all()
+    tips = []
+
+    for tips in out:
+        tips.append((
+            tips.id,
+            tips.name
+        ))
+
+        return render(request, "tips_List.html", {'tips': tips})
+
+
+def delete_tips(request, id):
+    tips = Tips.objects.get(id=id)
+    tips.delete()
+    return redirect("/")
+
+
+def edit_tips(request, id):
+    tips = Tips.object.get(id=id)
+    if request.method == "POST":
+        form = TipsName(request.POST)
+        if form.is_valid():
+            name = form['tips_name'].value()
+            tips.name = name
+            try:
+                tips.save()
+                return redirect("/")
+            except Exception as e:
+                form = TipsName(request.POST)
+            return render(request, "addTips.html", {
+                'form': form,
+                'error_massage': "занято"
+            })
+        else:
+            form = TipsName(initial={
+                "Tips_name": tips.name
+            })
+
+            return render(request, "addTips.html", {'form': form})
