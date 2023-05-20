@@ -52,21 +52,24 @@ def add_tips(request):
 
 def tips_list(request):
     out = Tips.objects.all()
-    tips = []
+    tips_ = []
 
     for tips in out:
-        tips.append((
+        tips_.append((
             tips.id,
             tips.name
         ))
 
-        return render(request, "tips_List.html", {'tips': tips})
+    return render(request, "tipsList.html", {'tips': tips_})
 
 
 def delete_tips(request, id):
-    tips = Tips.objects.get(id=id)
-    tips.delete()
-    return redirect("/")
+    product = Tips.objects.get(id=id)
+    if request.method == "POST":
+        product.delete()
+        return redirect("/")
+    else:
+        return render(request)
 
 
 def edit_tips(request, id):
